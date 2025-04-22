@@ -38,7 +38,8 @@
     "@mdi/js": "^7.2.0",
     "@msgpack/msgpack": "^2.8.0",
     "@shoelace-style/shoelace": "^2.11.0",
-    "lit": "^3.0.0"
+    "lit": "^3.0.0",
+    "@darksoil-studio/file-storage-zome": "0.400.0-rev.4ea07c0418fb016194166866d12f0f580fa2a1a5"
   },
   "devDependencies": {
     "@darksoil-studio/profiles-zome": "0.400.0-rev.bd07ee83a6c3b35e4f73c531f2cc7daee8d0a840",

@@ -12,8 +12,21 @@ export class ChainOfCustodyStore {
 	constructor(public client: ChainOfCustodyClient) {}
 
 	/** Custody Transfer */
+	custodyTransfersForResource = new MemoHoloHashMap(
+		(custodyResourceHash: ActionHash) =>
+			pipe(
+				liveLinksSignal(
+					this.client,
+					custodyResourceHash,
+					() => this.client.getCustodyTransfersForResource(custodyResourceHash),
+					'ResourceToCustodyTransfers',
+				),
+				links => links.map(l => this.custodyTransfers.get(l.target)),
+			),
+	);
 
 	custodyTransfers = new MemoHoloHashMap((custodyTransferHash: ActionHash) => ({
+		custodyTransferHash,
 		entry: immutableEntrySignal(() =>
 			this.client.getCustodyTransfer(custodyTransferHash),
 		),

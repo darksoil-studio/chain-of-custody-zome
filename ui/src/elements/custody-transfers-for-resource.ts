@@ -1,78 +1,99 @@
-import { ActionHash, AgentPubKey, EntryHash, Record } from "@holochain/client";
-import { consume } from "@lit/context";
-import { localized, msg } from "@lit/localize";
-import { mdiInformationOutline } from "@mdi/js";
-import { hashProperty, sharedStyles, wrapPathInSvg } from "@tnesh-stack/elements";
-import { AsyncComputed, SignalWatcher } from "@tnesh-stack/signals";
-import { EntryRecord, slice } from "@tnesh-stack/utils";
-import { html, LitElement } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { ActionHash, AgentPubKey, EntryHash, Record } from '@holochain/client';
+import { consume } from '@lit/context';
+import { localized, msg } from '@lit/localize';
+import { mdiInformationOutline } from '@mdi/js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
+import {
+	hashProperty,
+	sharedStyles,
+	wrapPathInSvg,
+} from '@tnesh-stack/elements';
+import '@tnesh-stack/elements/dist/elements/display-error.js';
+import {
+	AsyncComputed,
+	SignalWatcher,
+	joinAsync,
+	joinAsyncMap,
+	mapCompleted,
+	pipe,
+} from '@tnesh-stack/signals';
+import { EntryRecord, mapValues, slice } from '@tnesh-stack/utils';
+import { LitElement, html } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 
-import "@tnesh-stack/elements/dist/elements/display-error.js";
-import "@shoelace-style/shoelace/dist/components/spinner/spinner.js";
-import "@shoelace-style/shoelace/dist/components/icon/icon.js";
-
-import { ChainOfCustodyStore } from "../chain-of-custody-store.js";
-import { chainOfCustodyStoreContext } from "../context.js";
-import { CustodyTransfer } from "../types.js";
-
-import "./custody-transfer-summary.js";
+import { ChainOfCustodyStore } from '../chain-of-custody-store.js';
+import { chainOfCustodyStoreContext } from '../context.js';
+import { CustodyTransfer } from '../types.js';
+import './custody-transfer-summary.js';
 
 /**
  * @element custody-transfers-for-resource
  */
 @localized()
-@customElement("custody-transfers-for-resource")
+@customElement('custody-transfers-for-resource')
 export class CustodyTransfersForResource extends SignalWatcher(LitElement) {
-  /**
-   * REQUIRED. The ResourceHash for which the CustodyTransfers should be fetched
-   */
-  @property(hashProperty("resource-hash"))
-  resourceHash!: ActionHash;
+	/**
+	 * REQUIRED. The ResourceHash for which the CustodyTransfers should be fetched
+	 */
+	@property(hashProperty('custodied-resource-hash'))
+	custodiedResourceHash!: ActionHash;
 
-  /**
-   * @internal
-   */
-  @consume({ context: chainOfCustodyStoreContext, subscribe: true })
-  chainOfCustodyStore!: ChainOfCustodyStore;
+	/**
+	 * @internal
+	 */
+	@consume({ context: chainOfCustodyStoreContext, subscribe: true })
+	chainOfCustodyStore!: ChainOfCustodyStore;
 
-  renderList(hashes: Array<ActionHash>) {
-    if (hashes.length === 0) {
-      return html` <div class="column placeholder center-content" style="gap: 8px; flex: 1">
-        <sl-icon
-          style="font-size: 64px;"
-          .src=${wrapPathInSvg(mdiInformationOutline)}
-        ></sl-icon>
-        <span style="text-align: center">${msg("No custody transfers found for this resource.")}</span>
-      </div>`;
-    }
+	renderList(hashes: Array<ActionHash>) {
+		if (hashes.length === 0) {
+			return html` <div
+				class="column placeholder center-content"
+				style="gap: 8px; flex: 1"
+			>
+				<sl-icon
+					style="font-size: 64px;"
+					.src=${wrapPathInSvg(mdiInformationOutline)}
+				></sl-icon>
+				<span style="text-align: center"
+					>${msg('No custody transfers found for this resource.')}</span
+				>
+			</div>`;
+		}
 
-    return html`
-      <div class="column" style="gap: 8px">
-        ${hashes.map(hash => html`<custody-transfer-summary .custodyTransferHash=${hash}></custody-transfer-summary>`)}
-      </div>
-    `;
-  }
+		return html`
+			<div class="column" style="gap: 8px">
+				${hashes.map(
+					hash =>
+						html`<custody-transfer-summary
+							.custodyTransferHash=${hash}
+						></custody-transfer-summary>`,
+				)}
+			</div>
+		`;
+	}
 
-  render() {
-    const map = this.chainOfCustodyStore.resources.get(this.resourceHash).custodyTransfers.get();
+	render() {
+		const map = this.chainOfCustodyStore.custodyTransfersForResource
+			.get(this.custodiedResourceHash)
+			.get();
 
-    switch (map.status) {
-      case "pending":
-        return html`<div
-          style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;"
-        >
-          <sl-spinner style="font-size: 2rem;"></sl-spinner>
-        </div>`;
-      case "error":
-        return html`<display-error
-          .headline=${msg("Error fetching the custody transfers")}
-          .error=${map.error}
-        ></display-error>`;
-      case "completed":
-        return this.renderList(Array.from(map.value.keys()));
-    }
-  }
+		switch (map.status) {
+			case 'pending':
+				return html`<div
+					style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;"
+				>
+					<sl-spinner style="font-size: 2rem;"></sl-spinner>
+				</div>`;
+			case 'error':
+				return html`<display-error
+					.headline=${msg('Error fetching the custody transfers')}
+					.error=${map.error}
+				></display-error>`;
+			case 'completed':
+				return this.renderList(map.value.map(v => v.custodyTransferHash));
+		}
+	}
 
-  static styles = [sharedStyles];
+	static styles = [sharedStyles];
 }

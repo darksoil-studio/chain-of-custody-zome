@@ -13,7 +13,6 @@ import {
 import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
 
 import { CustodyTransfer } from './types.js';
-import { Resource } from './types.js';
 import { ChainOfCustodySignal } from './types.js';
 
 export class ChainOfCustodyClient extends ZomeClient<ChainOfCustodySignal> {
@@ -27,12 +26,30 @@ export class ChainOfCustodyClient extends ZomeClient<ChainOfCustodySignal> {
 
 	/** Custody Transfer */
 
-	async createCustodyTransfer(
+	async sendCustodyTransferRequest(
+		recipient: AgentPubKey,
 		custodyTransfer: CustodyTransfer,
 	): Promise<EntryRecord<CustodyTransfer>> {
 		const record: Record = await this.callZome(
-			'create_custody_transfer',
-			custodyTransfer,
+			'send_custody_transfer_request',
+			{
+				recipient,
+				custody_transfer: custodyTransfer,
+			},
+		);
+		return new EntryRecord(record);
+	}
+
+	async acceptCustodyTransferRequest(
+		recipient: AgentPubKey,
+		custodyTransfer: CustodyTransfer,
+	): Promise<EntryRecord<CustodyTransfer>> {
+		const record: Record = await this.callZome(
+			'send_custody_transfer_request',
+			{
+				recipient,
+				custody_transfer: custodyTransfer,
+			},
 		);
 		return new EntryRecord(record);
 	}

@@ -2,6 +2,7 @@
   description = "Template for Holochain app development";
 
   inputs = {
+    file-storage.url = "github:darksoil-studio/file-storage/main-0.4";
     holonix.url = "github:holochain/holonix/main-0.4";
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -45,6 +46,7 @@
 
           packages = [
             inputs'.tnesh-stack.packages.holochain
+            inputs'.p2p-shipyard.packages.hc-pilot
             inputs'.tnesh-stack.packages.hc-scaffold-zome
             inputs'.playground.packages.hc-playground
           ];

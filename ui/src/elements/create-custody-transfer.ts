@@ -1,134 +1,177 @@
-import { ActionHash, AgentPubKey, DnaHash, EntryHash, Record } from "@holochain/client";
-import { consume } from "@lit/context";
-import { localized, msg } from "@lit/localize";
-import { mdiAlertCircleOutline, mdiDelete } from "@mdi/js";
-import { hashProperty, hashState, notifyError, onSubmit, sharedStyles, wrapPathInSvg } from "@tnesh-stack/elements";
-import { SignalWatcher } from "@tnesh-stack/signals";
-import { EntryRecord } from "@tnesh-stack/utils";
-import { html, LitElement } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
-import { repeat } from "lit/directives/repeat.js";
+import '@darksoil-studio/file-storage-zome/dist/elements/upload-files.js';
+import {
+	ActionHash,
+	AgentPubKey,
+	DnaHash,
+	EntryHash,
+	Record,
+} from '@holochain/client';
+import { consume } from '@lit/context';
+import { localized, msg } from '@lit/localize';
+import { mdiAlertCircleOutline, mdiDelete } from '@mdi/js';
+import '@shoelace-style/shoelace/dist/components/alert/alert.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+import '@shoelace-style/shoelace/dist/components/icon-button/icon-button.js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
+import '@shoelace-style/shoelace/dist/components/input/input.js';
+import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
+import {
+	hashProperty,
+	hashState,
+	notifyError,
+	onSubmit,
+	sharedStyles,
+	wrapPathInSvg,
+} from '@tnesh-stack/elements';
+import '@tnesh-stack/elements/dist/elements/display-error.js';
+import { SignalWatcher, joinAsync, pipe } from '@tnesh-stack/signals';
+import { EntryRecord } from '@tnesh-stack/utils';
+import { LitElement, html } from 'lit';
+import { customElement, property, query, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 
-import "@shoelace-style/shoelace/dist/components/icon-button/icon-button.js";
-
-import "@shoelace-style/shoelace/dist/components/textarea/textarea.js";
-import "@shoelace-style/shoelace/dist/components/button/button.js";
-import "@shoelace-style/shoelace/dist/components/alert/alert.js";
-import "@tnesh-stack/elements/dist/elements/display-error.js";
-import "@shoelace-style/shoelace/dist/components/icon/icon.js";
-import "@shoelace-style/shoelace/dist/components/card/card.js";
-import SlAlert from "@shoelace-style/shoelace/dist/components/alert/alert.js";
-import "@shoelace-style/shoelace/dist/components/input/input.js";
-import { ChainOfCustodyStore } from "../chain-of-custody-store.js";
-import { chainOfCustodyStoreContext } from "../context.js";
-import { CustodyTransfer } from "../types.js";
+import { ChainOfCustodyStore } from '../chain-of-custody-store.js';
+import { chainOfCustodyStoreContext } from '../context.js';
+import { CustodyTransfer } from '../types.js';
 
 /**
  * @element create-custody-transfer
  * @fires custody-transfer-created: detail will contain { custodyTransferHash }
  */
 @localized()
-@customElement("create-custody-transfer")
+@customElement('create-custody-transfer')
 export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
-  /**
-   * REQUIRED. The custodied resource hash for this CustodyTransfer
-   */
-  @property(hashProperty("custodied-resource-hash"))
-  custodiedResourceHash!: ActionHash;
+	/**
+	 * REQUIRED. The custodied resource hash for this CustodyTransfer
+	 */
+	@property(hashProperty('custodied-resource-hash'))
+	custodiedResourceHash!: ActionHash;
 
-  /**
-   * REQUIRED. The images hashes for this CustodyTransfer
-   */
-  @property()
-  imagesHashes!: Array<EntryHash>;
+	/**
+	 * @internal
+	 */
+	@consume({ context: chainOfCustodyStoreContext, subscribe: true })
+	chainOfCustodyStore!: ChainOfCustodyStore;
 
-  /**
-   * OPTIONAl. The previous custody transfer hash for this CustodyTransfer
-   */
-  @property(hashProperty("previous-custody-transfer-hash"))
-  previousCustodyTransferHash: EntryHash | undefined;
+	/**
+	 * @internal
+	 */
+	@state()
+	committing = false;
 
-  /**
-   * @internal
-   */
-  @consume({ context: chainOfCustodyStoreContext, subscribe: true })
-  chainOfCustodyStore!: ChainOfCustodyStore;
+	/**
+	 * @internal
+	 */
+	@query('#create-form')
+	form!: HTMLFormElement;
 
-  /**
-   * @internal
-   */
-  @state()
-  committing = false;
+	async sendCustodyTransferRequest(
+		custodyTransfers: Array<EntryRecord<CustodyTransfer>>,
+		fields: Partial<CustodyTransfer>,
+	) {
+		if (this.custodiedResourceHash === undefined) {
+			throw new Error(
+				'Cannot create a new Custody Transfer without its custodied_resource_hash field',
+			);
+		}
 
-  /**
-   * @internal
-   */
-  @query("#create-form")
-  form!: HTMLFormElement;
+		const lastCustodyTransfer = custodyTransfers[custodyTransfers.length];
+		const previous_custody_transfer_hash = lastCustodyTransfer?.entryHash;
 
-  async createCustodyTransfer(fields: Partial<CustodyTransfer>) {
-    if (this.custodiedResourceHash === undefined) {
-      throw new Error("Cannot create a new Custody Transfer without its custodied_resource_hash field");
-    }
-    if (this.imagesHashes === undefined) {
-      throw new Error("Cannot create a new Custody Transfer without its images_hashes field");
-    }
+		const custodyTransfer: CustodyTransfer = {
+			custodied_resource_hash: this.custodiedResourceHash!,
+			location: fields.location ? fields.location : undefined,
+			notes: fields.notes ? fields.notes : undefined,
+			images_hashes: Array.isArray(fields.images_hashes)
+				? fields.images_hashes
+				: fields.images_hashes
+					? [fields.images_hashes]
+					: [],
+			previous_custody_transfer_hash,
+		};
 
-    const custodyTransfer: CustodyTransfer = {
-      custodied_resource_hash: this.custodiedResourceHash!,
-      location: fields.location ? fields.location : undefined,
-      notes: fields.notes ? fields.notes : undefined,
-      images_hashes: this.imagesHashes!,
-      previous_custody_transfer_hash: this.previousCustodyTransferHash!,
-    };
+		try {
+			this.committing = true;
+			const record: EntryRecord<CustodyTransfer> =
+				await this.chainOfCustodyStore.client.sendCustodyTransferRequest(
+					custodyTransfer,
+				);
 
-    try {
-      this.committing = true;
-      const record: EntryRecord<CustodyTransfer> = await this.chainOfCustodyStore.client.createCustodyTransfer(
-        custodyTransfer,
-      );
+			this.dispatchEvent(
+				new CustomEvent('custody-transfer-created', {
+					composed: true,
+					bubbles: true,
+					detail: {
+						custodyTransferHash: record.actionHash,
+					},
+				}),
+			);
 
-      this.dispatchEvent(
-        new CustomEvent("custody-transfer-created", {
-          composed: true,
-          bubbles: true,
-          detail: {
-            custodyTransferHash: record.actionHash,
-          },
-        }),
-      );
+			this.form.reset();
+		} catch (e: unknown) {
+			console.error(e);
+			notifyError(msg('Error creating the custody transfer'));
+		}
+		this.committing = false;
+	}
 
-      this.form.reset();
-    } catch (e: unknown) {
-      console.error(e);
-      notifyError(msg("Error creating the custody transfer"));
-    }
-    this.committing = false;
-  }
+	renderForm(custodyTransfers: Array<EntryRecord<CustodyTransfer>>) {
+		return html` <sl-card style="flex: 1;">
+			<form
+				id="create-form"
+				class="column"
+				style="flex: 1; gap: 16px;"
+				${onSubmit(fields =>
+					this.sendCustodyTransferRequest(custodyTransfers, fields),
+				)}
+			>
+				<span class="title">${msg('Transfer Custody')}</span>
 
-  render() {
-    return html`
-      <sl-card style="flex: 1;">
+				<sl-input name="location" .label=${msg('Location')}></sl-input>
+				<sl-textarea name="notes" .label=${msg('Notes')}></sl-textarea>
 
-        <form 
-          id="create-form"
-          class="column"
-          style="flex: 1; gap: 16px;"
-          ${onSubmit(fields => this.createCustodyTransfer(fields))}
-        >  
-          <span class="title">${msg("Create Custody Transfer")}</span>
+				<div class="column" style="gap: 8px">
+					<span>${msg('Images')}</span>
 
-          <sl-input name="location" .label=${msg("Location")} ></sl-input>
-          <sl-textarea name="notes" .label=${msg("Notes")} ></sl-textarea>
+					<upload-files
+						name="images_hashes"
+						.label=${msg('')}
+						accepted-files="image/jpeg,image/png,image/gif"
+					>
+					</upload-files>
+				</div>
 
-          <sl-button
-            variant="primary"
-            type="submit"
-            .loading=${this.committing}
-          >${msg("Create Custody Transfer")}</sl-button>
-        </form> 
-      </sl-card>`;
-  }
+				<sl-button variant="primary" type="submit" .loading=${this.committing}
+					>${msg('Send Custody Transfer Request')}</sl-button
+				>
+			</form>
+		</sl-card>`;
+	}
 
-  static styles = [sharedStyles];
+	render() {
+		const map = pipe(
+			this.chainOfCustodyStore.custodyTransfersForResource.get(
+				this.custodiedResourceHash,
+			),
+			custodyTransfers => joinAsync(custodyTransfers.map(t => t.entry.get())),
+		).get();
+
+		switch (map.status) {
+			case 'pending':
+				return html`<div
+					style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;"
+				>
+					<sl-spinner style="font-size: 2rem;"></sl-spinner>
+				</div>`;
+			case 'error':
+				return html`<display-error
+					.headline=${msg('Error fetching the custody transfers')}
+					.error=${map.error}
+				></display-error>`;
+			case 'completed':
+				return this.renderForm(map.value);
+		}
+	}
+	static styles = [sharedStyles];
 }
