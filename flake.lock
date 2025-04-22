@@ -6035,17 +6035,18 @@
         "tnesh-stack": "tnesh-stack_5"
       },
       "locked": {
-        "lastModified": 1745320875,
+        "lastModified": 1745331463,
         "narHash": "sha256-X6Ctxvv4dOZeaIrl7TiiFAV4JMT//r2VtYEOMMaOMEQ=",
-        "ref": "refs/heads/develop",
-        "rev": "10be6cfb4c85511622be9d55e910cb50b996962c",
-        "revCount": 520,
-        "type": "git",
-        "url": "file:///home/guillem/projects/darksoil/p2p-shipyard"
+        "owner": "darksoil-studio",
+        "repo": "p2p-shipyard",
+        "rev": "340ecbd1950656a3945cc018b0d72a98bd344933",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/guillem/projects/darksoil/p2p-shipyard"
+        "owner": "darksoil-studio",
+        "ref": "main-0.4",
+        "repo": "p2p-shipyard",
+        "type": "github"
       }
     },
     "p2p-shipyard_4": {
