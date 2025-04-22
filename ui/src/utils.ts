@@ -66,5 +66,5 @@ export function getPreviousCustodian(
 		agent =>
 			encodeHashToBase64(agent) !==
 			encodeHashToBase64(custodyTransfer.entry.current_custodian),
-	)!!;
+	)!;
 }
