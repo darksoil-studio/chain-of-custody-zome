@@ -8,6 +8,7 @@
     flake-parts.follows = "holonix/flake-parts";
 
     tnesh-stack.url = "github:darksoil-studio/tnesh-stack/main-0.4";
+    p2p-shipyard.url = "github:darksoil-studio/p2p-shipyard/main-0.4";
     playground.url = "github:darksoil-studio/holochain-playground/main-0.4";
 
     profiles-zome.url = "github:darksoil-studio/profiles-zome/main-0.4";
@@ -25,57 +26,47 @@
   };
 
   outputs = inputs:
-    inputs.flake-parts.lib.mkFlake
-      {
-        inherit inputs;
-      }
-      {
-        imports = [
-          ./zomes/integrity/chain_of_custody/zome.nix
-          ./zomes/coordinator/chain_of_custody/zome.nix
-          # Just for testing purposes
-          ./workdir/dna.nix
-          ./workdir/happ.nix
-        ];
-      
-        systems = builtins.attrNames inputs.holonix.devShells;
-        perSystem =
-          { inputs'
-          , config
-          , pkgs
-          , system
-          , ...
-          }: {
-            devShells.default = pkgs.mkShell {
-              inputsFrom = [ 
-                inputs'.tnesh-stack.devShells.synchronized-pnpm
-                inputs'.holonix.devShells.default
-              ];
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        ./zomes/integrity/chain_of_custody/zome.nix
+        ./zomes/coordinator/chain_of_custody/zome.nix
+        # Just for testing purposes
+        ./workdir/dna.nix
+        ./workdir/happ.nix
+      ];
 
-              packages = [
-                inputs'.tnesh-stack.packages.holochain
-                inputs'.tnesh-stack.packages.hc-scaffold-zome
-                inputs'.playground.packages.hc-playground
-              ];
-            };
-            devShells.npm-ci = inputs'.tnesh-stack.devShells.synchronized-pnpm;
+      systems = builtins.attrNames inputs.holonix.devShells;
+      perSystem = { inputs', config, pkgs, system, ... }: {
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [
+            inputs'.tnesh-stack.devShells.synchronized-pnpm
+            inputs'.holonix.devShells.default
+          ];
 
-            packages.scaffold = pkgs.symlinkJoin {
-              name = "scaffold-remote-zome";
-              paths = [ inputs'.tnesh-stack.packages.scaffold-remote-zome ];
-              buildInputs = [ pkgs.makeWrapper ];
-              postBuild = ''
-                wrapProgram $out/bin/scaffold-remote-zome \
-                  --add-flags "chain-of-custody-zome \
-                    --integrity-zome-name chain_of_custody_integrity \
-                    --coordinator-zome-name chain_of_custody \
-                    --remote-zome-git-url github:darksoil-studio/chain-of-custody-zome \
-                    --remote-npm-package-name @darksoil-studio/chain-of-custody-zome \
-                    --remote-zome-git-branch main-0.4 \
-                    --context-element chain-of-custody-context \
-                    --context-element-import @darksoil-studio/chain-of-custody-zome/dist/elements/chain-of-custody-context.js" 
-              '';
-            };
-          };
+          packages = [
+            inputs'.tnesh-stack.packages.holochain
+            inputs'.tnesh-stack.packages.hc-scaffold-zome
+            inputs'.playground.packages.hc-playground
+          ];
+        };
+        devShells.npm-ci = inputs'.tnesh-stack.devShells.synchronized-pnpm;
+
+        packages.scaffold = pkgs.symlinkJoin {
+          name = "scaffold-remote-zome";
+          paths = [ inputs'.tnesh-stack.packages.scaffold-remote-zome ];
+          buildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/scaffold-remote-zome \
+              --add-flags "chain-of-custody-zome \
+                --integrity-zome-name chain_of_custody_integrity \
+                --coordinator-zome-name chain_of_custody \
+                --remote-zome-git-url github:darksoil-studio/chain-of-custody-zome \
+                --remote-npm-package-name @darksoil-studio/chain-of-custody-zome \
+                --remote-zome-git-branch main-0.4 \
+                --context-element chain-of-custody-context \
+                --context-element-import @darksoil-studio/chain-of-custody-zome/dist/elements/chain-of-custody-context.js" 
+          '';
+        };
       };
+    };
 }
