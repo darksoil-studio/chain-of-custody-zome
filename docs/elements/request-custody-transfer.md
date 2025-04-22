@@ -1,13 +1,13 @@
-# `<create-custody-transfer>`
+# `<request-custody-transfer>`
 
 ## Usage
 
 0. If you haven't already, [go through the setup for the module](/setup).
 
-1. Import the `<create-custody-transfer>` element somewhere in the javascript side of your web-app like this:
+1. Import the `<request-custody-transfer>` element somewhere in the javascript side of your web-app like this:
 
 ```js
-import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.js'
+import '@darksoil-studio/chain-of-custody/dist/elements/request-custody-transfer.js'
 ```
 
 2. Use it in the html side of your web-app like this:
@@ -15,43 +15,43 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 
 ::: code-group
 ```html [Lit]
-<create-custody-transfer 
+<request-custody-transfer 
   .custodiedResourceHash=${ custodiedResourceHash }
 >
-</create-custody-transfer>
+</request-custody-transfer>
 ```
 
 ```html [React]
-<create-custody-transfer
+<request-custody-transfer
   custodiedResourceHash={ custodiedResourceHash }
 >
-</create-custody-transfer>
+</request-custody-transfer>
 ```
 
 ```html [Angular]
-<create-custody-transfer
+<request-custody-transfer
   [custodiedResourceHash]="custodiedResourceHash"
 >
-</create-custody-transfer>
+</request-custody-transfer>
 ```
 
 ```html [Vue]
-<create-custody-transfer
+<request-custody-transfer
   :custodiedResourceHash="custodiedResourceHash"
 >
-</create-custody-transfer>
+</request-custody-transfer>
 ```
 
 ```html [Svelte]
-<create-custody-transfer
+<request-custody-transfer
   custodied-resource-hash={encodeHashToBase64(custodiedResourceHash)}
 >
-</create-custody-transfer>
+</request-custody-transfer>
 ```
 :::
 
 > [!WARNING]
-> Like all the elements in this module, `<create-custody-transfer>` needs to be placed inside an initialized `<chain-of-custody-context>`.
+> Like all the elements in this module, `<request-custody-transfer>` needs to be placed inside an initialized `<chain-of-custody-context>`.
 
 ## Demo
 
@@ -78,7 +78,7 @@ onMounted(async () => {
   await import('@api-viewer/demo/lib/api-demo.js');
   await import('@darksoil-studio/profiles-zome/dist/elements/profiles-context.js');
   if (!customElements.get('chain-of-custody-context')) await import('../../ui/src/elements/chain-of-custody-context.ts');
-  if (!customElements.get('create-custody-transfer')) await import('../../ui/src/elements/create-custody-transfer.ts');
+  if (!customElements.get('request-custody-transfer')) await import('../../ui/src/elements/request-custody-transfer.ts');
 
   const profiles = await demoProfiles();
 
@@ -92,7 +92,7 @@ onMounted(async () => {
   const client = new ChainOfCustodyClient(mock, "chain_of_custody_test");
 
   const custodyTransfer = {
-		current_custodian: profilesMock.myPubKey,
+		current_custodian: Array.from(profiles.keys())[1],
 		custodied_resource_hash: await fakeActionHash(),
 		images_hashes: [],
 		location: undefined,
@@ -100,14 +100,14 @@ onMounted(async () => {
 		previous_custody_transfer_hash: undefined,
   };
 
-  const record = await mock.create_custody_transfer(custodyTransfer);
+  const record = await mock.attempt_create_custody_transfer(custodyTransfer);
 
   const store = new ChainOfCustodyStore(client);
   
   render(html`
     <profiles-context .store=${profilesStore}>
       <chain-of-custody-context .store=${store}>
-        <api-demo src="custom-elements.json" only="create-custody-transfer" exclude-knobs="store">
+        <api-demo src="custom-elements.json" only="request-custody-transfer" exclude-knobs="store">
         </api-demo>
       </chain-of-custody-context>
     </profiles-context>
@@ -119,7 +119,7 @@ onMounted(async () => {
 
 ## API Reference
 
-`<create-custody-transfer>` is a [custom element](https://web.dev/articles/custom-elements-v1), which means that it can be used in any web app or website. Here is the reference for its API:
+`<request-custody-transfer>` is a [custom element](https://web.dev/articles/custom-elements-v1), which means that it can be used in any web app or website. Here is the reference for its API:
 
-<api-docs src="custom-elements.json" only="create-custody-transfer">
+<api-docs src="custom-elements.json" only="request-custody-transfer">
 </api-docs>

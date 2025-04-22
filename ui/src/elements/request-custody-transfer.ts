@@ -43,12 +43,12 @@ import { chainOfCustodyStoreContext } from '../context.js';
 import { CustodyTransfer } from '../types.js';
 
 /**
- * @element create-custody-transfer
+ * @element request-custody-transfer
  * @fires custody-transfer-created: detail will contain { custodyTransferHash }
  */
 @localized()
-@customElement('create-custody-transfer')
-export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
+@customElement('request-custody-transfer')
+export class RequestCustodyTransfer extends SignalWatcher(LitElement) {
 	/**
 	 * REQUIRED. The custodied resource hash for this CustodyTransfer
 	 */

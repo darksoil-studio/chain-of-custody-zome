@@ -54,11 +54,11 @@ Here is an interactive demo of the element:
 import { onMounted } from "vue";
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { demoProfiles, ProfilesZomeMock } from '@darksoil-studio/profiles-zome/dist/mocks.js';
-import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
+import { decodeHashFromBase64, encodeHashToBase64, fakeActionHash  } from '@holochain/client';
 import { render } from "lit";
 import { html, unsafeStatic } from "lit/static-html.js";
 
-import { ChainOfCustodyZomeMock, sampleCustodyTransfer } from "../../ui/src/mocks.ts";
+import { ChainOfCustodyZomeMock } from "../../ui/src/mocks.ts";
 import { ChainOfCustodyStore } from "../../ui/src/chain-of-custody-store.ts";
 import { ChainOfCustodyClient } from "../../ui/src/chain-of-custody-client.ts";
 
@@ -80,13 +80,25 @@ onMounted(async () => {
   const mock = new ChainOfCustodyZomeMock();
   const client = new ChainOfCustodyClient(mock, "chain_of_custody_test");
 
-  const custodyTransfer1 = await sampleCustodyTransfer(client);
+  const custodyTransfer1 = {
+		current_custodian: Array.from(profiles.keys())[1],
+		custodied_resource_hash: await fakeActionHash(),
+		images_hashes: [],
+		location: undefined,
+		notes: undefined,
+		previous_custody_transfer_hash: undefined,
+  };
 
-  const record1 = await mock.create_custody_transfer(custodyTransfer1);
+  const record1 = await mock.attempt_create_custody_transfer(custodyTransfer1);
 
-  const custodyTransfer2 = await sampleCustodyTransfer(client, {
-    previous_custody_transfer_hash: record1.signed_action.hashed.hash
-  });
+  const custodyTransfer2 = {
+		current_custodian: Array.from(profiles.keys())[0],
+		custodied_resource_hash: await fakeActionHash(),
+		images_hashes: [],
+		location: undefined,
+		notes: undefined,
+    previous_custody_transfer_hash: record1.signed_action.hashed.content.entry_hash
+  };
 
   const record = await mock.create_custody_transfer(custodyTransfer2);
 
