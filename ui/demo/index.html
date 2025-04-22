@@ -47,6 +47,7 @@
 
 			import '../src/elements/chain-of-custody-context.ts';
 			import '../src/elements/create-custody-transfer.ts';
+			import '../src/elements/custody-transfer-detail.ts';
 			import '../src/elements/custody-transfers-for-resource.ts';
 
 			export class DemoApp extends SignalWatcher(LitElement) {
@@ -64,7 +65,7 @@
 					const interval = setInterval(async () => {
 						const links = await this.shadowRoot
 							.querySelector('profiles-context')
-							.store.client.getProfileForAgent(this._client.myPubKey);
+							.store.client.getAllProfiles();
 						if (links.length === 0) return;
 						this.custodiedResourceHash = links[0].target;
 						this.requestUpdate();
@@ -83,8 +84,22 @@
 							</create-custody-transfer>
 							<custody-transfers-for-resource
 								.custodiedResourceHash=${this.custodiedResourceHash}
+								@custody-transfer-selected=${e => {
+									this.custodyTransferHash = e.detail.transfer.entryHash;
+									this.requestUpdate();
+								}}
 							>
 							</custody-transfers-for-resource>
+
+							${this.custodyTransferHash
+								? html`<div>
+										<sl-card
+											><custody-transfer-detail
+												.custodyTransferHash=${this.custodyTransferHash}
+											></custody-transfer-detail
+										></sl-card>
+									</div>`
+								: html``}
 						</div>
 					`;
 				}

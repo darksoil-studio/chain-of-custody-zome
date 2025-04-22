@@ -2,6 +2,7 @@ import '@darksoil-studio/file-storage-zome/dist/elements/upload-files.js';
 import {
 	ActionHash,
 	AgentPubKey,
+	CounterSigningSessionData,
 	DnaHash,
 	EntryHash,
 	Record,
@@ -19,14 +20,20 @@ import '@shoelace-style/shoelace/dist/components/textarea/textarea.js';
 import {
 	hashProperty,
 	hashState,
+	notify,
 	notifyError,
 	onSubmit,
 	sharedStyles,
 	wrapPathInSvg,
 } from '@tnesh-stack/elements';
 import '@tnesh-stack/elements/dist/elements/display-error.js';
-import { SignalWatcher, joinAsync, pipe } from '@tnesh-stack/signals';
-import { EntryRecord } from '@tnesh-stack/utils';
+import {
+	SignalWatcher,
+	joinAsync,
+	pipe,
+	toPromise,
+} from '@tnesh-stack/signals';
+import { CountersignedEntryRecord, EntryRecord } from '@tnesh-stack/utils';
 import { LitElement, html } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -76,10 +83,13 @@ export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
 			);
 		}
 
-		const lastCustodyTransfer = custodyTransfers[custodyTransfers.length];
-		const previous_custody_transfer_hash = lastCustodyTransfer?.entryHash;
+		const lastCustodyTransfer = custodyTransfers[custodyTransfers.length - 1];
+		const previous_custody_transfer_hash = lastCustodyTransfer
+			? lastCustodyTransfer.entryHash
+			: undefined;
 
 		const custodyTransfer: CustodyTransfer = {
+			current_custodian: this.chainOfCustodyStore.client.client.myPubKey,
 			custodied_resource_hash: this.custodiedResourceHash!,
 			location: fields.location ? fields.location : undefined,
 			notes: fields.notes ? fields.notes : undefined,
@@ -93,25 +103,23 @@ export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
 
 		try {
 			this.committing = true;
-			const record: EntryRecord<CustodyTransfer> =
-				await this.chainOfCustodyStore.client.sendCustodyTransferRequest(
-					custodyTransfer,
-				);
 
-			this.dispatchEvent(
-				new CustomEvent('custody-transfer-created', {
-					composed: true,
-					bubbles: true,
-					detail: {
-						custodyTransferHash: record.actionHash,
-					},
-				}),
+			const currentCustodiant = await toPromise(
+				this.chainOfCustodyStore.currentCustodian.get(
+					this.custodiedResourceHash,
+				),
 			);
+			await this.chainOfCustodyStore.client.sendCustodyTransferRequest(
+				currentCustodiant,
+				custodyTransfer,
+			);
+
+			notify(msg('Custody transfer request sent.'));
 
 			this.form.reset();
 		} catch (e: unknown) {
 			console.error(e);
-			notifyError(msg('Error creating the custody transfer'));
+			notifyError(msg('Error requesting custody transfer.'));
 		}
 		this.committing = false;
 	}
@@ -126,7 +134,7 @@ export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
 					this.sendCustodyTransferRequest(custodyTransfers, fields),
 				)}
 			>
-				<span class="title">${msg('Transfer Custody')}</span>
+				<span class="title">${msg('Request Custody Transfer')}</span>
 
 				<sl-input name="location" .label=${msg('Location')}></sl-input>
 				<sl-textarea name="notes" .label=${msg('Notes')}></sl-textarea>
@@ -166,11 +174,11 @@ export class CreateCustodyTransfer extends SignalWatcher(LitElement) {
 				</div>`;
 			case 'error':
 				return html`<display-error
-					.headline=${msg('Error fetching the custody transfers')}
+					.headline=${msg('Error fetching the custody transfers.')}
 					.error=${map.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderForm(map.value);
+				return this.renderForm(map.value.filter(v => !!v));
 		}
 	}
 	static styles = [sharedStyles];

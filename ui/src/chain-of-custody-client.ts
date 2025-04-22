@@ -2,15 +2,22 @@ import {
 	ActionHash,
 	AgentPubKey,
 	AppClient,
+	CounterSigningSessionData,
 	CreateLink,
 	Delete,
 	DeleteLink,
+	Entry,
 	EntryHash,
 	Link,
 	Record,
 	SignedActionHashed,
 } from '@holochain/client';
-import { EntryRecord, ZomeClient } from '@tnesh-stack/utils';
+import { EntryDetails } from '@tnesh-stack/core-types';
+import {
+	CountersignedEntryRecord,
+	EntryRecord,
+	ZomeClient,
+} from '@tnesh-stack/utils';
 
 import { CustodyTransfer } from './types.js';
 import { ChainOfCustodySignal } from './types.js';
@@ -27,41 +34,52 @@ export class ChainOfCustodyClient extends ZomeClient<ChainOfCustodySignal> {
 	/** Custody Transfer */
 
 	async sendCustodyTransferRequest(
-		recipient: AgentPubKey,
+		currentCustodiant: AgentPubKey,
 		custodyTransfer: CustodyTransfer,
 	): Promise<EntryRecord<CustodyTransfer>> {
 		const record: Record = await this.callZome(
 			'send_custody_transfer_request',
 			{
-				recipient,
+				current_custodiant: currentCustodiant,
 				custody_transfer: custodyTransfer,
 			},
 		);
 		return new EntryRecord(record);
 	}
 
-	async acceptCustodyTransferRequest(
+	async getCustodiedResource(
+		custodiedResourceHash: ActionHash,
+	): Promise<EntryRecord<any> | undefined> {
+		const record: Record | undefined = await this.callZome(
+			'get_custodied_resource',
+			custodiedResourceHash,
+		);
+		return record ? new EntryRecord(record) : undefined;
+	}
+
+	async attemptCreateCustodyTransfer(
 		recipient: AgentPubKey,
 		custodyTransfer: CustodyTransfer,
-	): Promise<EntryRecord<CustodyTransfer>> {
+	): Promise<CountersignedEntryRecord<CustodyTransfer>> {
 		const record: Record = await this.callZome(
-			'send_custody_transfer_request',
+			'attempt_create_custody_transfer',
 			{
 				recipient,
 				custody_transfer: custodyTransfer,
 			},
 		);
-		return new EntryRecord(record);
+		return new CountersignedEntryRecord(record);
 	}
 
 	async getCustodyTransfer(
-		custodyTransferHash: ActionHash,
-	): Promise<EntryRecord<CustodyTransfer> | undefined> {
-		const record: Record = await this.callZome(
+		custodyTransferHash: EntryHash,
+	): Promise<CountersignedEntryRecord<CustodyTransfer> | undefined> {
+		const record = await this.callZome(
 			'get_custody_transfer',
 			custodyTransferHash,
 		);
-		return record ? new EntryRecord(record) : undefined;
+
+		return record ? new CountersignedEntryRecord(record) : undefined;
 	}
 
 	async getCustodyTransfersForResource(

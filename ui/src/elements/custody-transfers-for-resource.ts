@@ -1,7 +1,22 @@
-import { ActionHash, AgentPubKey, EntryHash, Record } from '@holochain/client';
+import '@darksoil-studio/profiles-provider/dist/elements/profile-list-item.js';
+import {
+	ActionHash,
+	AgentPubKey,
+	CounterSigningSessionData,
+	EntryHash,
+	Record,
+	encodeHashToBase64,
+} from '@holochain/client';
 import { consume } from '@lit/context';
 import { localized, msg } from '@lit/localize';
-import { mdiInformationOutline } from '@mdi/js';
+import {
+	mdiArrowRight,
+	mdiArrowRightThick,
+	mdiInformationOutline,
+	mdiTransfer,
+	mdiTrashCan,
+} from '@mdi/js';
+import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/icon/icon.js';
 import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import {
@@ -18,13 +33,22 @@ import {
 	mapCompleted,
 	pipe,
 } from '@tnesh-stack/signals';
-import { EntryRecord, mapValues, slice } from '@tnesh-stack/utils';
-import { LitElement, html } from 'lit';
+import {
+	CountersignedEntryRecord,
+	EntryRecord,
+	mapValues,
+	slice,
+} from '@tnesh-stack/utils';
+import '@ui5/webcomponents-fiori/dist/Timeline.js';
+import '@ui5/webcomponents-fiori/dist/TimelineGroupItem.js';
+import '@ui5/webcomponents-fiori/dist/TimelineItem.js';
+import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import { ChainOfCustodyStore } from '../chain-of-custody-store.js';
 import { chainOfCustodyStoreContext } from '../context.js';
 import { CustodyTransfer } from '../types.js';
+import { getPreviousCustodian } from '../utils.js';
 import './custody-transfer-summary.js';
 
 /**
@@ -45,8 +69,8 @@ export class CustodyTransfersForResource extends SignalWatcher(LitElement) {
 	@consume({ context: chainOfCustodyStoreContext, subscribe: true })
 	chainOfCustodyStore!: ChainOfCustodyStore;
 
-	renderList(hashes: Array<ActionHash>) {
-		if (hashes.length === 0) {
+	renderList(transfers: Array<EntryRecord<CustodyTransfer>>) {
+		if (transfers.length === 0) {
 			return html` <div
 				class="column placeholder center-content"
 				style="gap: 8px; flex: 1"
@@ -62,21 +86,49 @@ export class CustodyTransfersForResource extends SignalWatcher(LitElement) {
 		}
 
 		return html`
-			<div class="column" style="gap: 8px">
-				${hashes.map(
-					hash =>
-						html`<custody-transfer-summary
-							.custodyTransferHash=${hash}
-						></custody-transfer-summary>`,
+			<ui5-timeline style="flex: 1">
+				${transfers.map(
+					transfer => html`
+						<ui5-timeline-item
+							@click=${() =>
+								this.dispatchEvent(
+									new CustomEvent('custody-transfer-selected', {
+										bubbles: true,
+										composed: true,
+										detail: {
+											transfer,
+										},
+									}),
+								)}
+							.titleText=${new Date(
+								transfer.action.timestamp,
+							).toLocaleDateString()}
+						>
+							<div class="row" style="gap: 8px; align-items: center">
+								<profile-list-item
+									.agentPubKey=${getPreviousCustodian(transfer)}
+								>
+								</profile-list-item>
+								<sl-icon .src=${wrapPathInSvg(mdiArrowRightThick)}> </sl-icon>
+								<profile-list-item
+									.agentPubKey=${transfer.entry.current_custodian}
+								>
+								</profile-list-item>
+							</div>
+						</ui5-timeline-item>
+					`,
 				)}
-			</div>
+			</ui5-timeline>
 		`;
 	}
 
 	render() {
-		const map = this.chainOfCustodyStore.custodyTransfersForResource
-			.get(this.custodiedResourceHash)
-			.get();
+		const map = pipe(
+			this.chainOfCustodyStore.custodyTransfersForResource.get(
+				this.custodiedResourceHash,
+			),
+			custodyTransfers => joinAsync(custodyTransfers.map(t => t.entry.get())),
+		).get();
 
 		switch (map.status) {
 			case 'pending':
@@ -91,9 +143,16 @@ export class CustodyTransfersForResource extends SignalWatcher(LitElement) {
 					.error=${map.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderList(map.value.map(v => v.custodyTransferHash));
+				return this.renderList(map.value.filter(c => !!c));
 		}
 	}
 
-	static styles = [sharedStyles];
+	static styles = [
+		sharedStyles,
+		css`
+			:host {
+				display: flex;
+			}
+		`,
+	];
 }

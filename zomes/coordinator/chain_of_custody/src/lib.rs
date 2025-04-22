@@ -1,10 +1,45 @@
 use chain_of_custody_integrity::*;
+use countersigning::common::CreateCustodyTransferLinksInput;
 use hdk::prelude::*;
 
+pub mod countersigning;
 pub mod custody_transfer;
 
 #[hdk_extern]
+pub fn get_custodied_resource(custodied_resource_hash: ActionHash) -> ExternResult<Option<Record>> {
+    get(custodied_resource_hash, GetOptions::default())
+}
+
+#[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let mut functions = BTreeSet::new();
+
+    functions.insert((zome_info()?.name, "receive_custody_transfer_request".into()));
+    let grant = ZomeCallCapGrant {
+        access: CapAccess::Unrestricted,
+        functions: GrantedFunctions::Listed(functions),
+        tag: "".into(),
+    };
+    create_cap_grant(grant)?;
+
+    let mut functions = BTreeSet::new();
+    functions.insert((zome_info()?.name, "transaction_preflight".into()));
+    let grant = ZomeCallCapGrant {
+        access: CapAccess::Unrestricted,
+        functions: GrantedFunctions::Listed(functions),
+        tag: "".into(),
+    };
+    create_cap_grant(grant)?;
+
+    let mut functions = BTreeSet::new();
+    functions.insert((zome_info()?.name, "request_create_custody_transfer".into()));
+    let grant = ZomeCallCapGrant {
+        access: CapAccess::Unrestricted,
+        functions: GrantedFunctions::Listed(functions),
+        tag: "".into(),
+    };
+    create_cap_grant(grant)?;
+
     Ok(InitCallbackResult::Pass)
 }
 
@@ -33,6 +68,10 @@ pub enum Signal {
         create_link_action: SignedActionHashed,
         link_type: LinkTypes,
     },
+    NewCustodyTransferRequest {
+        recipient: AgentPubKey,
+        custody_transfer: CustodyTransfer,
+    },
 }
 
 #[hdk_extern(infallible)]
@@ -48,6 +87,24 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
     match action.hashed.content.clone() {
         Action::Create(_create) => {
             if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
+                let EntryTypes::CustodyTransfer(custody_transfer) = &app_entry;
+                let response = call_remote(
+                    agent_info()?.agent_initial_pubkey,
+                    zome_info()?.name,
+                    "create_custody_transfer_links".into(),
+                    None,
+                    CreateCustodyTransferLinksInput {
+                        custody_transfer: custody_transfer.clone(),
+                        custody_transfer_hash: _create.entry_hash,
+                    },
+                )?;
+                let ZomeCallResponse::Ok(_) = response else {
+                    return Err(wasm_error!(
+                        "Error creating custody transfer links: {:?}",
+                        response
+                    ));
+                };
+
                 emit_signal(Signal::EntryCreated { action, app_entry })?;
             }
             Ok(())

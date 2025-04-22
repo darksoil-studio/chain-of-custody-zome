@@ -3,6 +3,7 @@ use hdi::prelude::*;
 #[derive(Clone, PartialEq)]
 #[hdk_entry_helper]
 pub struct CustodyTransfer {
+    pub current_custodian: AgentPubKey,
     pub custodied_resource_hash: ActionHash,
     pub location: Option<String>,
     pub notes: Option<String>,
@@ -19,11 +20,11 @@ pub fn validate_create_custody_transfer(
     // TODO: validate record?
 
     if let Some(entry_hash) = custody_transfer.previous_custody_transfer_hash.clone() {
-        let entry = must_get_entry(entry_hash)?;
-        let _custody_transfer = crate::CustodyTransfer::try_from(entry)?;
+        validate_custody_transfer(entry_hash)
+    } else {
+        // TODO: add the appropriate validation rules
+        Ok(ValidateCallbackResult::Valid)
     }
-    // TODO: add the appropriate validation rules
-    Ok(ValidateCallbackResult::Valid)
 }
 
 pub fn validate_update_custody_transfer(
@@ -59,24 +60,32 @@ pub fn validate_create_link_resource_to_custody_transfers(
             "No action hash associated with link".to_string()
         )))?;
     let _record = must_get_valid_record(action_hash)?;
-
     // TODO: validate record?
 
-    let action_hash =
-        target_address
-            .into_action_hash()
-            .ok_or(wasm_error!(WasmErrorInner::Guest(
-                "No action hash associated with link".to_string()
-            )))?;
-    let record = must_get_valid_record(action_hash)?;
-    let _custody_transfer: crate::CustodyTransfer = record
-        .entry()
-        .to_app_option()
-        .map_err(|e| wasm_error!(e))?
+    let entry_hash = target_address
+        .into_entry_hash()
         .ok_or(wasm_error!(WasmErrorInner::Guest(
-            "Linked action must reference an entry".to_string()
+            "No action hash associated with link".to_string()
         )))?;
-    // TODO: add the appropriate validation rules
+
+    validate_custody_transfer(entry_hash)
+}
+
+fn validate_custody_transfer(entry_hash: EntryHash) -> ExternResult<ValidateCallbackResult> {
+    let entry = must_get_entry(entry_hash)?;
+
+    let Entry::CounterSign(_, bytes) = entry.content else {
+        return Ok(ValidateCallbackResult::Invalid(
+            "Custody transfer entry is not a countersigned entry.".into(),
+        ));
+    };
+
+    let Ok(_custody_transfer) = crate::CustodyTransfer::try_from(bytes.0) else {
+        return Ok(ValidateCallbackResult::Invalid(
+            "ResourceToCustodyTransfers links points to an entry that is not a CustodyTransfer"
+                .into(),
+        ));
+    };
     Ok(ValidateCallbackResult::Valid)
 }
 
@@ -103,24 +112,20 @@ pub fn validate_create_link_custody_transfer_to_custody_transfers(
         .ok_or(wasm_error!(WasmErrorInner::Guest(
             "No entry hash associated with link".to_string()
         )))?;
-    let entry = must_get_entry(entry_hash)?.content;
-    let _custody_transfer = crate::CustodyTransfer::try_from(entry)?;
-    let action_hash =
-        target_address
-            .into_action_hash()
-            .ok_or(wasm_error!(WasmErrorInner::Guest(
-                "No action hash associated with link".to_string()
-            )))?;
-    let record = must_get_valid_record(action_hash)?;
-    let _custody_transfer: crate::CustodyTransfer = record
-        .entry()
-        .to_app_option()
-        .map_err(|e| wasm_error!(e))?
+
+    let valid = validate_custody_transfer(entry_hash)?;
+
+    let ValidateCallbackResult::Valid = valid else {
+        return Ok(valid);
+    };
+
+    let entry_hash = target_address
+        .into_entry_hash()
         .ok_or(wasm_error!(WasmErrorInner::Guest(
-            "Linked action must reference an entry".to_string()
+            "No entry hash associated with link".to_string()
         )))?;
-    // TODO: add the appropriate validation rules
-    Ok(ValidateCallbackResult::Valid)
+
+    validate_custody_transfer(entry_hash)
 }
 
 pub fn validate_delete_link_custody_transfer_to_custody_transfers(

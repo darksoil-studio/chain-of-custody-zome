@@ -9,7 +9,8 @@
     flake-parts.follows = "holonix/flake-parts";
 
     tnesh-stack.url = "github:darksoil-studio/tnesh-stack/main-0.4";
-    p2p-shipyard.url = "github:darksoil-studio/p2p-shipyard/main-0.4";
+    p2p-shipyard.url = "/home/guillem/projects/darksoil/p2p-shipyard";
+    # p2p-shipyard.url = "github:darksoil-studio/p2p-shipyard/main-0.4";
     playground.url = "github:darksoil-studio/holochain-playground/main-0.4";
 
     profiles-zome.url = "github:darksoil-studio/profiles-zome/main-0.4";
@@ -45,7 +46,10 @@
           ];
 
           packages = [
-            inputs'.tnesh-stack.packages.holochain
+            (inputs'.holonix.packages.holochain.override {
+              cargoExtraArgs =
+                " --features unstable-functions,unstable-sharding,unstable-countersigning";
+            })
             inputs'.p2p-shipyard.packages.hc-pilot
             inputs'.tnesh-stack.packages.hc-scaffold-zome
             inputs'.playground.packages.hc-playground
