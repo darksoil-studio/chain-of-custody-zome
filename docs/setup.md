@@ -17,7 +17,7 @@ This will do the following:
 
 That's it! You have now integrated the `chain_of_custody` coordinator and integrity zomes and their UI into your app!
 
-Now, [choose which elements you need](/elements/chain-of-custody-context.md) and import them like this:
+Now, [choose which elements you need](/elements/request-custody-transfer.md) and import them like this:
 
 ```js
 import "@darksoil-studio/chain-of-custody-zome/dist/elements/chain-of-custody-context.js";
