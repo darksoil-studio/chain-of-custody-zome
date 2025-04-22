@@ -49,7 +49,7 @@ export class ChainOfCustodyClient extends ZomeClient<ChainOfCustodySignal> {
 
 	async getCustodiedResource(
 		custodiedResourceHash: ActionHash,
-	): Promise<EntryRecord<any> | undefined> {
+	): Promise<EntryRecord<unknown> | undefined> {
 		const record: Record | undefined = await this.callZome(
 			'get_custodied_resource',
 			custodiedResourceHash,
