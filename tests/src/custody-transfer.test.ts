@@ -27,7 +27,7 @@ test('create and read CustodyTransfer', async () => {
 		const lastRecord = records[records.length - 1];
 
 		const custodyTransfer: CustodyTransfer = {
-			current_custodian: alice.player.agentPubKey,
+			current_custodian: bob.player.agentPubKey,
 			custodied_resource_hash: lastRecord.action_address,
 			images_hashes: [],
 			location: undefined,
@@ -37,10 +37,7 @@ test('create and read CustodyTransfer', async () => {
 
 		// Alice creates a CustodyTransfer
 		const custodyTransferRecord: EntryRecord<CustodyTransfer> =
-			await alice.store.client.attemptCreateCustodyTransfer(
-				bob.player.agentPubKey,
-				custodyTransfer,
-			);
+			await alice.store.client.attemptCreateCustodyTransfer(custodyTransfer);
 		assert.ok(custodyTransferRecord);
 
 		// Wait for the created entry to be propagated to the other node.
