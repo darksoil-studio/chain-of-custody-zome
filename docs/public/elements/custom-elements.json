@@ -1,0 +1,1036 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "locales/locales.js",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "sourceLocale",
+          "default": "`en`",
+          "description": "The locale code that templates in this source code are written in."
+        },
+        {
+          "kind": "variable",
+          "name": "targetLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ , ]",
+          "description": "The other locale codes that this application is localized into. Sorted\nlexicographically."
+        },
+        {
+          "kind": "variable",
+          "name": "allLocales",
+          "type": {
+            "text": "array"
+          },
+          "default": "[ `en`, ]",
+          "description": "All valid project locale codes. Sorted lexicographically."
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "sourceLocale",
+          "declaration": {
+            "name": "sourceLocale",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "targetLocales",
+          "declaration": {
+            "name": "targetLocales",
+            "module": "locales/locales.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "allLocales",
+          "declaration": {
+            "name": "allLocales",
+            "module": "locales/locales.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/chain-of-custody-client.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ChainOfCustodyClient",
+          "members": [
+            {
+              "kind": "method",
+              "name": "sendCustodyTransferRequest",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryRecord<CustodyTransfer>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "currentCustodiant",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "custodyTransfer",
+                  "type": {
+                    "text": "CustodyTransfer"
+                  }
+                }
+              ],
+              "description": "Custody Transfer"
+            },
+            {
+              "kind": "method",
+              "name": "getCustodiedResource",
+              "return": {
+                "type": {
+                  "text": "Promise<EntryRecord<unknown> | undefined>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodiedResourceHash",
+                  "type": {
+                    "text": "ActionHash"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "attemptCreateCustodyTransfer",
+              "return": {
+                "type": {
+                  "text": "Promise<CountersignedEntryRecord<CustodyTransfer>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "recipient",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "custodyTransfer",
+                  "type": {
+                    "text": "CustodyTransfer"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "getCustodyTransfer",
+              "return": {
+                "type": {
+                  "text": "Promise<CountersignedEntryRecord<CustodyTransfer> | undefined>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodyTransferHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "getCustodyTransfersForResource",
+              "return": {
+                "type": {
+                  "text": "Promise<Array<Link>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "resourceHash",
+                  "type": {
+                    "text": "ActionHash"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "getCustodyTransfersForCustodyTransfer",
+              "return": {
+                "type": {
+                  "text": "Promise<Array<Link>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodyTransferHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                }
+              ]
+            }
+          ],
+          "superclass": {
+            "name": "ZomeClient",
+            "package": "@tnesh-stack/utils"
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ChainOfCustodyClient",
+          "declaration": {
+            "name": "ChainOfCustodyClient",
+            "module": "src/chain-of-custody-client.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/chain-of-custody-store.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ChainOfCustodyStore",
+          "members": [
+            {
+              "kind": "field",
+              "name": "currentCustodian",
+              "default": "new MemoHoloHashMap( (custodiedResourceHash: ActionHash) => new AsyncComputed(() => { const custodyTransfers = this.custodyTransfersForResource .get(custodiedResourceHash) .get(); if (custodyTransfers.status !== 'completed') return custodyTransfers; if (custodyTransfers.value.length > 0) { const lastCustodyTransfer = custodyTransfers.value[ custodyTransfers.value.length - 1 ].entry.get(); if (lastCustodyTransfer.status !== 'completed') return lastCustodyTransfer; return { status: 'completed', value: lastCustodyTransfer.value!.entry.current_custodian, }; } else { const custodiedResource = this.custodiedResourceRecord .get(custodiedResourceHash) .get(); if (custodiedResource.status !== 'completed') return custodiedResource; if (!custodiedResource) { return { status: 'error', error: msg('Failed to find custodied resource.'), }; } return { status: 'completed', value: custodiedResource.value.action.author, }; } }), )"
+            },
+            {
+              "kind": "field",
+              "name": "custodiedResourceRecord",
+              "privacy": "private",
+              "default": "new MemoHoloHashMap( (custodiedResourceHash: ActionHash) => immutableEntrySignal(() => this.client.getCustodiedResource(custodiedResourceHash), ), )"
+            },
+            {
+              "kind": "field",
+              "name": "custodyTransfersForResource",
+              "default": "new MemoHoloHashMap( (custodyResourceHash: ActionHash) => mapCompleted( liveLinksSignal( this.client, custodyResourceHash, () => this.client.getCustodyTransfersForResource(custodyResourceHash), 'ResourceToCustodyTransfers', 3000, ), links => uniquify(links.map(l => l.target)).map(t => this.custodyTransfers.get(t), ), ), )",
+              "description": "Custody Transfer"
+            },
+            {
+              "kind": "field",
+              "name": "custodyTransfers",
+              "default": "new MemoHoloHashMap((custodyTransferHash: ActionHash) => ({ custodyTransferHash, entry: lazyLoad(() => this.client.getCustodyTransfer(custodyTransferHash)), custodyTransfers: mapCompleted( liveLinksSignal( this.client, custodyTransferHash, () => this.client.getCustodyTransfersForCustodyTransfer( custodyTransferHash, ), 'CustodyTransferToCustodyTransfers', ), links => links.map(l => l.target), ), }))"
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ChainOfCustodyStore",
+          "declaration": {
+            "name": "ChainOfCustodyStore",
+            "module": "src/chain-of-custody-store.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/context.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "chainOfCustodyStoreContext"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "chainOfCustodyStoreContext",
+          "declaration": {
+            "name": "chainOfCustodyStoreContext",
+            "module": "src/context.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/index.ts",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./chain-of-custody-store.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./chain-of-custody-client.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./context.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "*",
+          "declaration": {
+            "name": "*",
+            "package": "./types.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/mocks.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ChainOfCustodyZomeMock",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodyTransfers",
+              "default": "new HoloHashMap< ActionHash, { deletes: Array<SignedActionHashed<Delete>>; revisions: Array<Record>; } >()",
+              "description": "Custody Transfer"
+            },
+            {
+              "kind": "field",
+              "name": "custodyTransfersForResource",
+              "default": "new HoloHashMap<ActionHash, Link[]>()"
+            },
+            {
+              "kind": "field",
+              "name": "custodyTransfersForCustodyTransfer",
+              "default": "new HoloHashMap<ActionHash, Link[]>()"
+            },
+            {
+              "kind": "method",
+              "name": "create_custody_transfer",
+              "return": {
+                "type": {
+                  "text": "Promise<Record>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodyTransfer",
+                  "type": {
+                    "text": "CustodyTransfer"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "get_custody_transfer",
+              "return": {
+                "type": {
+                  "text": "Promise<Record | undefined>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodyTransferHash",
+                  "type": {
+                    "text": "ActionHash"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "get_custody_transfers_for_resource",
+              "return": {
+                "type": {
+                  "text": "Promise<Array<Link>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "resourceHash",
+                  "type": {
+                    "text": "ActionHash"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "get_custody_transfers_for_custody_transfer",
+              "return": {
+                "type": {
+                  "text": "Promise<Array<Link>>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "custodyTransferHash",
+                  "type": {
+                    "text": "EntryHash"
+                  }
+                }
+              ]
+            }
+          ],
+          "superclass": {
+            "name": "ZomeMock",
+            "package": "@tnesh-stack/utils"
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ChainOfCustodyZomeMock",
+          "declaration": {
+            "name": "ChainOfCustodyZomeMock",
+            "module": "src/mocks.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/types.ts",
+      "declarations": [],
+      "exports": []
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/utils.ts",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "lazyLoad",
+          "return": {
+            "type": {
+              "text": "AsyncSignal<T>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "task",
+              "type": {
+                "text": "() => Promise<T>"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "getPreviousCustodian",
+          "return": {
+            "type": {
+              "text": "AgentPubKey"
+            }
+          },
+          "parameters": [
+            {
+              "name": "custodyTransfer",
+              "type": {
+                "text": "CountersignedEntryRecord<CustodyTransfer>"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "lazyLoad",
+          "declaration": {
+            "name": "lazyLoad",
+            "module": "src/utils.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "getPreviousCustodian",
+          "declaration": {
+            "name": "getPreviousCustodian",
+            "module": "src/utils.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/chain-of-custody-context.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ChainOfCustodyContext",
+          "members": [
+            {
+              "kind": "field",
+              "name": "client",
+              "type": {
+                "text": "AppClient"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "store",
+              "type": {
+                "text": "ChainOfCustodyStore"
+              },
+              "attribute": "store"
+            },
+            {
+              "kind": "field",
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "attribute": "role"
+            },
+            {
+              "kind": "field",
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'chain_of_custody'",
+              "attribute": "zome"
+            },
+            {
+              "kind": "field",
+              "name": "requestedCustodyTransfer",
+              "type": {
+                "text": "[AgentPubKey, CustodyTransfer] | undefined"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "renderDialog",
+              "parameters": [
+                {
+                  "name": "recipient",
+                  "type": {
+                    "text": "AgentPubKey"
+                  }
+                },
+                {
+                  "name": "requestedCustodyTransfer",
+                  "type": {
+                    "text": "CustodyTransfer"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "store",
+              "type": {
+                "text": "ChainOfCustodyStore"
+              },
+              "fieldName": "store"
+            },
+            {
+              "name": "role",
+              "type": {
+                "text": "string"
+              },
+              "fieldName": "role"
+            },
+            {
+              "name": "zome",
+              "type": {
+                "text": "string"
+              },
+              "default": "'chain_of_custody'",
+              "fieldName": "zome"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "chain-of-custody-context",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ChainOfCustodyContext",
+          "declaration": {
+            "name": "ChainOfCustodyContext",
+            "module": "src/elements/chain-of-custody-context.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "chain-of-custody-context",
+          "declaration": {
+            "name": "ChainOfCustodyContext",
+            "module": "src/elements/chain-of-custody-context.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/create-custody-transfer.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CreateCustodyTransfer",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodiedResourceHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The custodied resource hash for this CustodyTransfer",
+              "attribute": "custodiedResourceHash"
+            },
+            {
+              "kind": "method",
+              "name": "sendCustodyTransferRequest",
+              "parameters": [
+                {
+                  "name": "custodyTransfers",
+                  "type": {
+                    "text": "Array<EntryRecord<CustodyTransfer>>"
+                  }
+                },
+                {
+                  "name": "fields",
+                  "type": {
+                    "text": "Partial<CustodyTransfer>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderForm",
+              "parameters": [
+                {
+                  "name": "custodyTransfers",
+                  "type": {
+                    "text": "Array<EntryRecord<CustodyTransfer>>"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "description": "detail will contain { custodyTransferHash }",
+              "name": "custody-transfer-created:"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "custodiedResourceHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The custodied resource hash for this CustodyTransfer",
+              "fieldName": "custodiedResourceHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "create-custody-transfer",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CreateCustodyTransfer",
+          "declaration": {
+            "name": "CreateCustodyTransfer",
+            "module": "src/elements/create-custody-transfer.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "create-custody-transfer",
+          "declaration": {
+            "name": "CreateCustodyTransfer",
+            "module": "src/elements/create-custody-transfer.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/custody-transfer-detail.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CustodyTransferDetail",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "description": "REQUIRED. The hash of the CustodyTransfer to show",
+              "attribute": "custodyTransferHash"
+            },
+            {
+              "kind": "method",
+              "name": "renderDetail",
+              "parameters": [
+                {
+                  "name": "custodyTransfer",
+                  "type": {
+                    "text": "CountersignedEntryRecord<CustodyTransfer>"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "description": "fired when the user clicks the edit icon button",
+              "name": "edit-clicked:"
+            },
+            {
+              "description": "detail will contain { custodyTransferHash }",
+              "name": "custody-transfer-deleted:"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "description": "REQUIRED. The hash of the CustodyTransfer to show",
+              "fieldName": "custodyTransferHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "custody-transfer-detail",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CustodyTransferDetail",
+          "declaration": {
+            "name": "CustodyTransferDetail",
+            "module": "src/elements/custody-transfer-detail.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "custody-transfer-detail",
+          "declaration": {
+            "name": "CustodyTransferDetail",
+            "module": "src/elements/custody-transfer-detail.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/custody-transfer-summary.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CustodyTransferSummary",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The hash of the CustodyTransfer to show",
+              "attribute": "custodyTransferHash"
+            },
+            {
+              "kind": "method",
+              "name": "renderSummary",
+              "parameters": [
+                {
+                  "name": "custodyTransfer",
+                  "type": {
+                    "text": "CountersignedEntryRecord<CustodyTransfer>"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderCustodyTransfer"
+            }
+          ],
+          "events": [
+            {
+              "name": "custody-transfer-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
+            {
+              "description": "detail will contain { custodyTransferHash }",
+              "name": "custody-transfer-selected:"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The hash of the CustodyTransfer to show",
+              "fieldName": "custodyTransferHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "custody-transfer-summary",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CustodyTransferSummary",
+          "declaration": {
+            "name": "CustodyTransferSummary",
+            "module": "src/elements/custody-transfer-summary.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "custody-transfer-summary",
+          "declaration": {
+            "name": "CustodyTransferSummary",
+            "module": "src/elements/custody-transfer-summary.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/custody-transfers-for-custody-transfer.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CustodyTransfersForCustodyTransfer",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "description": "REQUIRED. The CustodyTransferHash for which the CustodyTransfers should be fetched",
+              "attribute": "custodyTransferHash"
+            },
+            {
+              "kind": "method",
+              "name": "renderList",
+              "parameters": [
+                {
+                  "name": "hashes",
+                  "type": {
+                    "text": "Array<ActionHash>"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "custodyTransferHash",
+              "type": {
+                "text": "EntryHash"
+              },
+              "description": "REQUIRED. The CustodyTransferHash for which the CustodyTransfers should be fetched",
+              "fieldName": "custodyTransferHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "custody-transfers-for-custody-transfer",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CustodyTransfersForCustodyTransfer",
+          "declaration": {
+            "name": "CustodyTransfersForCustodyTransfer",
+            "module": "src/elements/custody-transfers-for-custody-transfer.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "custody-transfers-for-custody-transfer",
+          "declaration": {
+            "name": "CustodyTransfersForCustodyTransfer",
+            "module": "src/elements/custody-transfers-for-custody-transfer.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/elements/custody-transfers-for-resource.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CustodyTransfersForResource",
+          "members": [
+            {
+              "kind": "field",
+              "name": "custodiedResourceHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The ResourceHash for which the CustodyTransfers should be fetched",
+              "attribute": "custodiedResourceHash"
+            },
+            {
+              "kind": "method",
+              "name": "renderList",
+              "parameters": [
+                {
+                  "name": "transfers",
+                  "type": {
+                    "text": "Array<EntryRecord<CustodyTransfer>>"
+                  }
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "name": "custody-transfer-selected",
+              "type": {
+                "text": "CustomEvent"
+              }
+            }
+          ],
+          "attributes": [
+            {
+              "name": "custodiedResourceHash",
+              "type": {
+                "text": "ActionHash"
+              },
+              "description": "REQUIRED. The ResourceHash for which the CustodyTransfers should be fetched",
+              "fieldName": "custodiedResourceHash"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "SignalWatcher",
+              "package": "@tnesh-stack/signals"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "custody-transfers-for-resource",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CustodyTransfersForResource",
+          "declaration": {
+            "name": "CustodyTransfersForResource",
+            "module": "src/elements/custody-transfers-for-resource.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "custody-transfers-for-resource",
+          "declaration": {
+            "name": "CustodyTransfersForResource",
+            "module": "src/elements/custody-transfers-for-resource.ts"
+          }
+        }
+      ]
+    }
+  ]
+}

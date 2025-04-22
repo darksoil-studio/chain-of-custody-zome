@@ -18,7 +18,6 @@ export type ChainOfCustodySignal =
 	| {
 			type: 'NewCustodyTransferRequest';
 			custody_transfer: CustodyTransfer;
-			recipient: AgentPubKey;
 	  };
 
 export type EntryTypes = { type: 'CustodyTransfer' } & CustodyTransfer;

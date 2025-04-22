@@ -17,8 +17,6 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 ```html [Lit]
 <create-custody-transfer 
   .custodiedResourceHash=${ custodiedResourceHash }
-  .imagesHashes=${[imagesHashes]}
-  .previousCustodyTransferHash=${ previousCustodyTransferHash }
 >
 </create-custody-transfer>
 ```
@@ -26,8 +24,6 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 ```html [React]
 <create-custody-transfer
   custodiedResourceHash={ custodiedResourceHash }
-  imagesHashes={[imagesHashes]}
-  previousCustodyTransferHash={ previousCustodyTransferHash }
 >
 </create-custody-transfer>
 ```
@@ -35,8 +31,6 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 ```html [Angular]
 <create-custody-transfer
   [custodiedResourceHash]="custodiedResourceHash"
-  [imagesHashes]="[imagesHashes]"
-  [previousCustodyTransferHash]="previousCustodyTransferHash"
 >
 </create-custody-transfer>
 ```
@@ -44,8 +38,6 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 ```html [Vue]
 <create-custody-transfer
   :custodiedResourceHash="custodiedResourceHash"
-  :imagesHashes="[imagesHashes]"
-  :previousCustodyTransferHash="previousCustodyTransferHash"
 >
 </create-custody-transfer>
 ```
@@ -53,8 +45,6 @@ import '@darksoil-studio/chain-of-custody/dist/elements/create-custody-transfer.
 ```html [Svelte]
 <create-custody-transfer
   custodied-resource-hash={encodeHashToBase64(custodiedResourceHash)}
-  images-hashes={[encodeHashToBase64(imagesHashes)]}
-  previous-custody-transfer-hash={encodeHashToBase64(previousCustodyTransferHash)}
 >
 </create-custody-transfer>
 ```
@@ -74,10 +64,10 @@ Here is an interactive demo of the element:
 import { onMounted } from "vue";
 import { ProfilesClient, ProfilesStore } from '@darksoil-studio/profiles-zome';
 import { demoProfiles, ProfilesZomeMock } from '@darksoil-studio/profiles-zome/dist/mocks.js';
-import { decodeHashFromBase64 } from '@holochain/client';
+import { decodeHashFromBase64, fakeActionHash } from '@holochain/client';
 import { render, html } from "lit";
 
-import { ChainOfCustodyZomeMock, sampleCustodyTransfer } from "../../ui/src/mocks.ts";
+import { ChainOfCustodyZomeMock } from "../../ui/src/mocks.ts";
 import { ChainOfCustodyStore } from "../../ui/src/chain-of-custody-store.ts";
 import { ChainOfCustodyClient } from "../../ui/src/chain-of-custody-client.ts";
 
@@ -101,7 +91,14 @@ onMounted(async () => {
   const mock = new ChainOfCustodyZomeMock();
   const client = new ChainOfCustodyClient(mock, "chain_of_custody_test");
 
-  const custodyTransfer = await sampleCustodyTransfer(client);
+  const custodyTransfer = {
+		current_custodian: profilesMock.myPubKey,
+		custodied_resource_hash: await fakeActionHash(),
+		images_hashes: [],
+		location: undefined,
+		notes: undefined,
+		previous_custody_transfer_hash: undefined,
+  };
 
   const record = await mock.create_custody_transfer(custodyTransfer);
 

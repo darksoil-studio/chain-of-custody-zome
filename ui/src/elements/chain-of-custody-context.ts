@@ -41,7 +41,7 @@ export class ChainOfCustodyContext extends SignalWatcher(LitElement) {
 	zome = 'chain_of_custody';
 
 	@state()
-	requestedCustodyTransfer: [AgentPubKey, CustodyTransfer] | undefined;
+	requestedCustodyTransfer: CustodyTransfer | undefined;
 
 	connectedCallback() {
 		super.connectedCallback();
@@ -66,17 +66,11 @@ export class ChainOfCustodyContext extends SignalWatcher(LitElement) {
 
 		client.onSignal(signal => {
 			if (signal.type !== 'NewCustodyTransferRequest') return;
-			this.requestedCustodyTransfer = [
-				signal.recipient,
-				signal.custody_transfer,
-			];
+			this.requestedCustodyTransfer = signal.custody_transfer;
 		});
 	}
 
-	renderDialog(
-		recipient: AgentPubKey,
-		requestedCustodyTransfer: CustodyTransfer,
-	) {
+	renderDialog(requestedCustodyTransfer: CustodyTransfer) {
 		return html`
 			<sl-dialog
 				open
@@ -88,7 +82,10 @@ export class ChainOfCustodyContext extends SignalWatcher(LitElement) {
 				<div class="column" style="gap: 16px">
 					<span>${msg('You have received a custody request from:')} </span>
 
-					<profile-list-item .agentPubKey=${recipient}> </profile-list-item>
+					<profile-list-item
+						.agentPubKey=${requestedCustodyTransfer.current_custodian}
+					>
+					</profile-list-item>
 
 					<div class="column" style="gap: 8px;">
 						<div class="row" style="gap: 8px;">
@@ -147,7 +144,6 @@ export class ChainOfCustodyContext extends SignalWatcher(LitElement) {
 						button.loading = true;
 						try {
 							await this.store.client.attemptCreateCustodyTransfer(
-								recipient,
 								requestedCustodyTransfer,
 							);
 							this.requestedCustodyTransfer = undefined;
@@ -166,10 +162,7 @@ export class ChainOfCustodyContext extends SignalWatcher(LitElement) {
 	render() {
 		return html`<slot></slot>
 			${this.requestedCustodyTransfer
-				? this.renderDialog(
-						this.requestedCustodyTransfer[0],
-						this.requestedCustodyTransfer[1],
-					)
+				? this.renderDialog(this.requestedCustodyTransfer)
 				: html``} `;
 	}
 

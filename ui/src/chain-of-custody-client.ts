@@ -57,15 +57,11 @@ export class ChainOfCustodyClient extends ZomeClient<ChainOfCustodySignal> {
 	}
 
 	async attemptCreateCustodyTransfer(
-		recipient: AgentPubKey,
 		custodyTransfer: CustodyTransfer,
 	): Promise<CountersignedEntryRecord<CustodyTransfer>> {
 		const record: Record = await this.callZome(
 			'attempt_create_custody_transfer',
-			{
-				recipient,
-				custody_transfer: custodyTransfer,
-			},
+			custodyTransfer,
 		);
 		return new CountersignedEntryRecord(record);
 	}

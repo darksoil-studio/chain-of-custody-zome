@@ -69,7 +69,6 @@ pub enum Signal {
         link_type: LinkTypes,
     },
     NewCustodyTransferRequest {
-        recipient: AgentPubKey,
         custody_transfer: CustodyTransfer,
     },
 }

@@ -10,37 +10,32 @@ use super::responder::TransactionPreflight;
 #[hdk_extern]
 pub fn receive_custody_transfer_request(custody_transfer: CustodyTransfer) -> ExternResult<()> {
     let call_info = call_info()?;
-    emit_signal(Signal::NewCustodyTransferRequest {
-        custody_transfer,
-        recipient: call_info.provenance,
-    })?;
+
+    if call_info.provenance.ne(&custody_transfer.current_custodian) {
+        return Ok(());
+    }
+
+    emit_signal(Signal::NewCustodyTransferRequest { custody_transfer })?;
 
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AttemptCreateCustodyTransferInput {
-    pub custody_transfer: CustodyTransfer,
-    pub recipient: AgentPubKey,
-}
-
 #[hdk_extern]
-pub fn attempt_create_custody_transfer(
-    input: AttemptCreateCustodyTransferInput,
-) -> ExternResult<Record> {
-    let counterparty = input.recipient;
-
+pub fn attempt_create_custody_transfer(custody_transfer: CustodyTransfer) -> ExternResult<Record> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
     let countersigning_agents = vec![
         (AgentPubKey::from(my_pub_key.clone()), vec![]),
-        (AgentPubKey::from(counterparty.clone()), vec![]),
+        (
+            AgentPubKey::from(custody_transfer.current_custodian.clone()),
+            vec![],
+        ),
     ];
     let preflight_request =
-        build_preflight_request(input.custody_transfer.clone(), countersigning_agents)?;
+        build_preflight_request(custody_transfer.clone(), countersigning_agents)?;
 
     let response = call_remote(
-        counterparty.clone().into(),
+        custody_transfer.current_custodian.clone().into(),
         zome_info()?.name,
         "transaction_preflight".into(),
         None,
@@ -72,7 +67,7 @@ pub fn attempt_create_custody_transfer(
     }?;
 
     let response = call_remote(
-        counterparty.clone().into(),
+        custody_transfer.current_custodian.clone().into(),
         zome_info()?.name,
         "request_create_custody_transfer".into(),
         None,
@@ -95,7 +90,7 @@ pub fn attempt_create_custody_transfer(
     })?;
 
     let action_hash = create_custody_transfer(
-        input.custody_transfer.clone(),
+        custody_transfer.clone(),
         vec![my_response, counterparty_response],
     )?;
 
