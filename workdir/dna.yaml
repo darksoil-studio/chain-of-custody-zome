@@ -1,0 +1,28 @@
+---
+manifest_version: "1"
+name: chain_of_custody_test
+integrity:
+  network_seed: ~
+  properties: ~
+  origin_time: 1676140846503210
+  zomes:
+    - name: chain_of_custody_integrity
+      hash: ~
+      bundled: "../target/wasm32-unknown-unknown/release/chain_of_custody_integrity.wasm"
+      dependencies: ~    
+    - name: profiles_integrity
+      hash: ~
+      bundled: <NIX PACKAGE>
+      dependencies: ~
+coordinator:
+  zomes:
+    - name: chain_of_custody
+      hash: ~
+      bundled: "../target/wasm32-unknown-unknown/release/chain_of_custody.wasm"
+      dependencies:
+        - name: chain_of_custody_integrity    
+    - name: profiles
+      hash: ~
+      bundled: <NIX PACKAGE>
+      dependencies:
+        - name: profiles_integrity

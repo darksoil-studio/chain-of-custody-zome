@@ -1,0 +1,15 @@
+[package]
+name = "chain_of_custody"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "chain_of_custody"
+
+[dependencies]
+hdk = { workspace = true }
+
+serde = { workspace = true }
+
+chain_of_custody_integrity = { path = "../../integrity/chain_of_custody", package = "chain_of_custody_integrity" }
