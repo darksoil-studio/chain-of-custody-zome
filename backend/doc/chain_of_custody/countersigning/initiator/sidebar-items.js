@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["attempt_create_custody_transfer","receive_custody_transfer_request"]};

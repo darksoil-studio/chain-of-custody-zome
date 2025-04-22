@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["request_create_custody_transfer","send_custody_transfer_request","transaction_preflight"],"struct":["SendCustodyTransferRequestInput","TransactionPreflight"]};

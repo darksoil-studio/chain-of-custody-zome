@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_custody_transfer","get_custody_transfers_for_custody_transfer","get_custody_transfers_for_resource"]};

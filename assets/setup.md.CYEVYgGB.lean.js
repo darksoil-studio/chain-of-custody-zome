@@ -1,0 +1,1 @@
+import{_ as t,c as a,o as s,a2 as o}from"./chunks/framework.D2CdExRZ.js";const u=JSON.parse('{"title":"Setup","description":"","frontmatter":{},"headers":[],"relativePath":"setup.md","filePath":"setup.md"}'),i={name:"setup.md"};function l(n,e,d,h,c,r){return s(),a("div",null,e[0]||(e[0]=[o("",13)]))}const m=t(i,[["render",l]]);export{u as __pageData,m as default};

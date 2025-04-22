@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_custody_transfer","create_custody_transfer_links"],"struct":["CreateCustodyTransferLinksInput"]};
