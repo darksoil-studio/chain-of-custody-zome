@@ -12,7 +12,6 @@ import {
 	Record,
 	SignedActionHashed,
 } from '@holochain/client';
-import { EntryDetails } from '@tnesh-stack/core-types';
 import {
 	CountersignedEntryRecord,
 	EntryRecord,
