@@ -38,20 +38,21 @@ export class CustodyTransferSummary extends SignalWatcher(LitElement) {
 	@consume({ context: chainOfCustodyStoreContext, subscribe: true })
 	chainOfCustodyStore!: ChainOfCustodyStore;
 
-	renderSummary(
-		sessionData: CounterSigningSessionData,
-		custodyTransfer: CustodyTransfer,
-	) {
+	renderSummary(custodyTransfer: CountersignedEntryRecord<CustodyTransfer>) {
 		return html`
 			<div class="column" style="gap: 16px; flex: 1;">
 				<div class="column" style="gap: 8px">
 					<span><strong>${msg('Location')}</strong></span>
-					<span style="white-space: pre-line">${custodyTransfer.location}</span>
+					<span style="white-space: pre-line"
+						>${custodyTransfer.entry.location}</span
+					>
 				</div>
 
 				<div class="column" style="gap: 8px">
 					<span><strong>${msg('Notes')}</strong></span>
-					<span style="white-space: pre-line">${custodyTransfer.notes}</span>
+					<span style="white-space: pre-line"
+						>${custodyTransfer.entry.notes}</span
+					>
 				</div>
 			</div>
 		`;
@@ -75,10 +76,7 @@ export class CustodyTransferSummary extends SignalWatcher(LitElement) {
 					.error=${custodyTransfer.error}
 				></display-error>`;
 			case 'completed':
-				return this.renderSummary(
-					custodyTransfer.value![0],
-					custodyTransfer.value![1],
-				);
+				return this.renderSummary(custodyTransfer.value!);
 		}
 	}
 
