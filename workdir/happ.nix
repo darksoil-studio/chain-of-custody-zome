@@ -1,14 +1,9 @@
 { inputs, ... }:
 
 {
-  perSystem =
-    { inputs'
-    , lib
-    , self'
-    , system
-    , ...
-    }: {
-      packages.chain_of_custody_test_happ = inputs.tnesh-stack.outputs.builders.${system}.happ {
+  perSystem = { inputs', lib, self', system, ... }: {
+    packages.chain_of_custody_test_happ =
+      inputs.holochain-nix-builders.outputs.builders.${system}.happ {
         happManifest = ./happ.yaml;
 
         dnas = {
@@ -18,5 +13,5 @@
           chain_of_custody_test = self'.packages.chain_of_custody_test_dna;
         };
       };
-    };
+  };
 }

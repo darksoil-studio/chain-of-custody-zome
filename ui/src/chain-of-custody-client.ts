@@ -16,7 +16,7 @@ import {
 	CountersignedEntryRecord,
 	EntryRecord,
 	ZomeClient,
-} from '@tnesh-stack/utils';
+} from '@darksoil-studio/holochain-utils';
 
 import { CustodyTransfer } from './types.js';
 import { ChainOfCustodySignal } from './types.js';

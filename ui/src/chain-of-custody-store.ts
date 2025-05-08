@@ -8,8 +8,8 @@ import {
 	mapCompleted,
 	pipe,
 	uniquify,
-} from '@tnesh-stack/signals';
-import { CountersignedEntryRecord, MemoHoloHashMap } from '@tnesh-stack/utils';
+} from '@darksoil-studio/holochain-signals';
+import { CountersignedEntryRecord, MemoHoloHashMap } from '@darksoil-studio/holochain-utils';
 
 import { ChainOfCustodyClient } from './chain-of-custody-client.js';
 import { CustodyTransfer } from './types.js';

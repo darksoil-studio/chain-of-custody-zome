@@ -5,8 +5,8 @@ import {
 	EntryContent,
 	encodeHashToBase64,
 } from '@holochain/client';
-import { AsyncSignal, AsyncState, Signal } from '@tnesh-stack/signals';
-import { CountersignedEntryRecord, EntryRecord } from '@tnesh-stack/utils';
+import { AsyncSignal, AsyncState, Signal } from '@darksoil-studio/holochain-signals';
+import { CountersignedEntryRecord, EntryRecord } from '@darksoil-studio/holochain-utils';
 
 import { CustodyTransfer } from './types';
 

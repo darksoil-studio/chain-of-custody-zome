@@ -185,7 +185,7 @@
           ],
           "superclass": {
             "name": "ZomeClient",
-            "package": "@tnesh-stack/utils"
+            "package": "@darksoil-studio/holochain-utils"
           }
         }
       ],
@@ -400,7 +400,7 @@
           ],
           "superclass": {
             "name": "ZomeMock",
-            "package": "@tnesh-stack/utils"
+            "package": "@darksoil-studio/holochain-utils"
           }
         }
       ],
@@ -574,7 +574,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -672,7 +672,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -756,7 +756,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -846,7 +846,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -920,7 +920,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {
@@ -1002,7 +1002,7 @@
           "mixins": [
             {
               "name": "SignalWatcher",
-              "package": "@tnesh-stack/signals"
+              "package": "@darksoil-studio/holochain-signals"
             }
           ],
           "superclass": {

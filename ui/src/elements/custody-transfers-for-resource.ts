@@ -23,8 +23,8 @@ import {
 	hashProperty,
 	sharedStyles,
 	wrapPathInSvg,
-} from '@tnesh-stack/elements';
-import '@tnesh-stack/elements/dist/elements/display-error.js';
+} from '@darksoil-studio/holochain-elements';
+import '@darksoil-studio/holochain-elements/dist/elements/display-error.js';
 import {
 	AsyncComputed,
 	SignalWatcher,
@@ -32,13 +32,13 @@ import {
 	joinAsyncMap,
 	mapCompleted,
 	pipe,
-} from '@tnesh-stack/signals';
+} from '@darksoil-studio/holochain-signals';
 import {
 	CountersignedEntryRecord,
 	EntryRecord,
 	mapValues,
 	slice,
-} from '@tnesh-stack/utils';
+} from '@darksoil-studio/holochain-utils';
 import '@ui5/webcomponents-fiori/dist/Timeline.js';
 import '@ui5/webcomponents-fiori/dist/TimelineGroupItem.js';
 import '@ui5/webcomponents-fiori/dist/TimelineItem.js';

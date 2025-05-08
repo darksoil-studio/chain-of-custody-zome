@@ -27,7 +27,7 @@ import {
 	fakeUpdateEntry,
 	hash,
 	pickBy,
-} from '@tnesh-stack/utils';
+} from '@darksoil-studio/holochain-utils';
 
 import { ChainOfCustodyClient } from './chain-of-custody-client.js';
 import { CustodyTransfer } from './types.js';
