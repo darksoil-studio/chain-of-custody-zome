@@ -1,3 +1,9 @@
-(function() {var implementors = {
-"chain_of_custody_integrity":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"chain_of_custody_integrity/enum.LinkTypes.html\" title=\"enum chain_of_custody_integrity::LinkTypes\">LinkTypes</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"chain_of_custody_integrity/enum.UnitEntryTypes.html\" title=\"enum chain_of_custody_integrity::UnitEntryTypes\">UnitEntryTypes</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["chain_of_custody_integrity",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.83.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"chain_of_custody_integrity/enum.LinkTypes.html\" title=\"enum chain_of_custody_integrity::LinkTypes\">LinkTypes</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.83.0/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"chain_of_custody_integrity/enum.UnitEntryTypes.html\" title=\"enum chain_of_custody_integrity::UnitEntryTypes\">UnitEntryTypes</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[621]}
