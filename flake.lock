@@ -12117,11 +12117,11 @@
         "scaffolding": "scaffolding_6"
       },
       "locked": {
-        "lastModified": 1746542897,
-        "narHash": "sha256-ShJdXXaF9YJGRuubza+tmcJNQhEMke8/84vhNWmgIsI=",
+        "lastModified": 1746689910,
+        "narHash": "sha256-3/OxeOXW1h1bw0Upytn7VvBeXAQjnabmDDoiDirLh/s=",
         "owner": "darksoil-studio",
         "repo": "p2p-shipyard",
-        "rev": "8579696fb024bf117433d7bc6ba81de623d2cb0b",
+        "rev": "be827646c360321673e5226f744383511444f81c",
         "type": "github"
       },
       "original": {
