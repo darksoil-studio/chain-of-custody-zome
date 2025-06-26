@@ -10,6 +10,7 @@ name = "chain_of_custody"
 [dependencies]
 hdk = { workspace = true }
 
+holochain_serialized_bytes = { workspace = true }
 serde = { workspace = true }
 
 chain_of_custody_integrity = { path = "../../integrity/chain_of_custody", package = "chain_of_custody_integrity" }
